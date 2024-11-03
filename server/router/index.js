@@ -1,10 +1,12 @@
 import express from 'express';
-import registerUser from '../Controllers/RegisterUser.js'; // Make sure to include the correct import
-
+import registerUser from '../Controllers/RegisterUser.js';
+import CheckEmail from '../Controllers/CheckEmail.js';
 const AuthRouter = express.Router();
 
-// Use AuthRouter instead of router
-AuthRouter.post('/register', registerUser); // This should reference the function
+// Register a new user
+AuthRouter.post('/register', registerUser);
+//Check Email User
+AuthRouter.post('/check-email', CheckEmail);
 
 // Export the router properly
 export default AuthRouter;
