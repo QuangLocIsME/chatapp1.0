@@ -2,7 +2,9 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/connectDB.js';
-import AuthRouter from './router/index.js'; // Import the router module
+// Import the router module
+import AuthRouter from './router/index.js';
+import ProfileRouter from './router/Profile.js';
 import cookieParser from 'cookie-parser';
 dotenv.config();
 
@@ -21,6 +23,6 @@ connectDB();
 
 // API endpoints
 app.use('/api/auth', AuthRouter);
-app.get('/', (req, res) => res.send('Hello from Express!'));
+app.use('/api/profile', ProfileRouter);
 
 app.listen(port, () => console.log(`Server is running on port ${port}!`));
