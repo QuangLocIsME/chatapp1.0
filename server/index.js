@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/connectDB.js';
 import AuthRouter from './router/index.js'; // Import the router module
-
+import cookieParser from 'cookie-parser';
 dotenv.config();
 
 const app = express();
@@ -15,7 +15,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
-
+app.use(cookieParser());
 // Connect to MongoDB
 connectDB();
 

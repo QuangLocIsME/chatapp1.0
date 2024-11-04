@@ -31,11 +31,11 @@ async function checkPassword(req, res) {
             secure: true,
         };
 
-        // Send the response with the token as a cookie
+
         return res.cookie('token', token, cookieOption).status(200).json({ message: "Mật khẩu đúng", token: token, success: true });
     } catch (error) {
-        console.error("Error during password check:", error); // Improved error log for clarity
-        res.status(500).json({ message: "Đã xảy ra lỗi trong quá trình kiểm tra mật khẩu" }); // Clarified error message
+        console.error("Error during password check:", error);
+        res.status(500).json({ message: "Đã xảy ra lỗi trong quá trình kiểm tra mật khẩu" });
     }
 }
 
