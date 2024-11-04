@@ -21,5 +21,6 @@ connectDB();
 
 // API endpoints
 app.use('/api/auth', AuthRouter);
+app.get('/', (req, res) => res.send('Hello from Express!'));
 
 app.listen(port, () => console.log(`Server is running on port ${port}!`));
