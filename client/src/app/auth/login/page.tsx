@@ -21,6 +21,7 @@ export default function Component() {
     const [step, setStep] = useState(1)
     const [error, setError] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const [name, setName] = useState('')
 
     const toggleTheme = () => {
         setIsDarkMode(!isDarkMode)
@@ -47,7 +48,9 @@ export default function Component() {
 
             if (response.status === 200) {
                 const userId = response.data.data._id
+                const name = response.data.data.name
                 setUserId(userId)
+                setName(name)
                 setStep(2)
                 toast.success("Email Verified", { description: "Enter your password to continue." })
             } else {
@@ -79,8 +82,9 @@ export default function Component() {
         try {
             const response = await axiosInstance.post(API_ROUTES.CHECKPASSWORD, { password, userId })
             if (response.status === 200 && response.data.success) {
-                toast.success("Login Successful", { description: "Welcome back!" })
+                toast.success("Login Successful", { description: `Welcome back! ${name}` });
                 console.log("Login successful. Token:", response.data.token)
+
             } else {
                 setError('Invalid credentials. Please try again.')
             }
