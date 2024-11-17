@@ -1,6 +1,6 @@
 import UserModel from "../models/UserModel.js"; // Ensure the .js extension if using ES modules
 import bcrypt from "bcrypt";
-import jsonwebtoken from 'jsonwebtoken'; // Correct import name
+import jsonwebtoken from "jsonwebtoken"; // Correct import name
 
 async function checkPassword(req, res) {
     try {
@@ -25,17 +25,27 @@ async function checkPassword(req, res) {
         };
 
         // Generate the token
-        const token = jsonwebtoken.sign(tokenData, process.env.JWT_SECRET, { expiresIn: '1h' });
-        const cookieOption = {
+        const token = jsonwebtoken.sign(tokenData, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+        // Set token in cookie
+        res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
-        };
+            secure: process.env.NODE_ENV === "production", // Use secure in production
+            sameSite: "strict", // Protect against CSRF
+            maxAge: 3600000, // 1 hour in milliseconds
+        });
 
-
-        return res.cookie('token', token, cookieOption).status(200).json({ message: "Mật khẩu đúng", token: token, success: true });
+        return res.status(200).json({
+            message: "Mật khẩu đúng",
+            token, // For debugging purposes, remove this in production
+            success: true,
+        });
     } catch (error) {
         console.error("Error during password check:", error);
-        res.status(500).json({ message: "Đã xảy ra lỗi trong quá trình kiểm tra mật khẩu" });
+        res.status(500).json({
+            message: "Đã xảy ra lỗi trong quá trình kiểm tra mật khẩu",
+            error: error.message,
+        });
     }
 }
 

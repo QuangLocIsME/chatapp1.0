@@ -19,7 +19,7 @@ export function ChatWindow() {
                     content="Hi Alice! All good here, how about you?"
                     timestamp="2:32 PM"
                 />
-                {/* Add more messages as needed */}
+
             </ScrollArea>
             <MessageInput />
         </div>
