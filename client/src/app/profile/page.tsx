@@ -8,10 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { toast, Toaster } from 'sonner';
-import withPrivateRoute from '@/lib/AuthContext';
 import axiosInstance from '@/lib/axiosInstance';
 import { API_ROUTES } from '@/lib/constants';
-
+import { withAuth } from '@/HOC/nextwithauth';
 function ProfilePage() {
     const [user, setUser] = useState({
         name: '',
@@ -137,4 +136,4 @@ function ProfilePage() {
     );
 }
 
-export default withPrivateRoute(ProfilePage);
+export default withAuth(ProfilePage);

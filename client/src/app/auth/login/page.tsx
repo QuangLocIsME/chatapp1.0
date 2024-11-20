@@ -152,7 +152,7 @@ export default function LoginComponent() {
                 </CardContent>
                 <CardFooter>
                     <div className="text-center">
-                        Don't have an account? <a href="/register" className="text-purple-500 hover:underline">Sign up</a>
+                        Don't have an account? <a href="/auth/register" className="text-purple-500 hover:underline">Sign up</a>
                     </div>
                 </CardFooter>
             </Card>

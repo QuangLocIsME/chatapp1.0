@@ -134,7 +134,7 @@ export default function Component() {
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-4">
                     <div className="text-sm text-center">
-                        Already have an account? <a href="#" className="text-purple-500 hover:underline">Log in</a>
+                        Already have an account? <a href="/auth/login" className="text-purple-500 hover:underline">Log in</a>
                     </div>
                 </CardFooter>
             </Card>

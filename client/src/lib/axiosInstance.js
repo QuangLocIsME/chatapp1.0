@@ -7,5 +7,27 @@ const axiosInstance = axios.create({
         'Content-Type': 'application/json',
     },
 });
+axiosInstance.interceptors.request.use(
+    (config) => {
+        // Thêm token nếu có
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// Thêm response interceptors
+axiosInstance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            window.location.href = 'auth/login'; // Redirect nếu không được xác thực
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default axiosInstance;
