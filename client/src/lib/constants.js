@@ -6,6 +6,8 @@ export const API_ROUTES = {
     GETUSERDETAILS: '/api/auth/check-user',
     UPDATE: '/api/profile/update',
     LOGOUT: '/api/auth/logout',
+    UPLOAD_AVATAR: '/api/profile/upload-avatar',
+    CHECK: (id) => '/api/check/${id}',
 };
 
 export const MESSAGES = {

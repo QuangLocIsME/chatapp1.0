@@ -11,6 +11,7 @@ import { toast, Toaster } from 'sonner';
 import axiosInstance from '@/lib/axiosInstance';
 import { API_ROUTES } from '@/lib/constants';
 import { withAuth } from '@/HOC/nextwithauth';
+
 function ProfilePage() {
     const [user, setUser] = useState({
         name: '',
@@ -19,6 +20,8 @@ function ProfilePage() {
         sfa: false,
     });
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [preview, setPreview] = useState<string | null>(null);
 
     // Fetch user data when the component loads
     useEffect(() => {
@@ -39,42 +42,33 @@ function ProfilePage() {
         fetchUserData();
     }, []);
 
-    const handleSave = async () => {
-        setLoading(true);
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files) return;
+        const file = files[0];
+        if (!file) return;
+        const previewUrl = URL.createObjectURL(file);
+        setPreview(previewUrl);
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        setUploading(true);
         try {
-            const response = await axiosInstance.put(API_ROUTES.UPDATE, user);
-            if (response.data.success) {
-                toast.success('Profile updated successfully');
+            const response = await axiosInstance.post(API_ROUTES.UPLOAD_AVATAR, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            });
+
+            if (response.data && response.data.url) {
+                setUser((prevUser) => ({ ...prevUser, avatar: response.data.url }));
+                toast.success('Avatar uploaded successfully');
             } else {
-                throw new Error(response.data.msg || 'Failed to update profile');
+                throw new Error(response.data.msg || 'Failed to upload avatar');
             }
         } catch (error) {
-            toast.error('Error saving profile');
-            console.error(error);
+            console.error('Error uploading avatar:', error);
+            toast.error('Error uploading avatar');
         } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleLogout = async () => {
-        if (confirm('Are you sure you want to log out?')) {
-            setLoading(true);
-            try {
-                const response = await axiosInstance.post(API_ROUTES.LOGOUT);
-                if (response.data.success) {
-                    toast.success('Logged out successfully');
-                    setTimeout(() => {
-                        window.location.href = '/auth/login'; // Redirect to login page
-                    }, 1000);
-                } else {
-                    throw new Error(response.data.msg || 'Failed to logout');
-                }
-            } catch (error) {
-                toast.error('Error logging out');
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
+            setUploading(false);
         }
     };
 
@@ -85,13 +79,25 @@ function ProfilePage() {
                     <CardTitle className="text-2xl font-bold text-center">User Profile</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex justify-center">
-                        <Image
-                            src={user.avatar || '/placeholder-avatar.png'}
-                            alt="User Avatar"
-                            width={120}
-                            height={120}
-                            className="rounded-full"
+                    <div className="flex flex-col items-center space-y-4 relative group">
+                        <label htmlFor="avatar-upload" className="relative cursor-pointer">
+                            <Image
+                                src={user.avatar || '/placeholder-avatar.png'}
+                                alt="User Avatar"
+                                width={120}
+                                height={120}
+                                className="rounded-full group-hover:opacity-70 transition-opacity"
+                            />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                                Change your avatar
+                            </span>
+                        </label>
+                        <input
+                            id="avatar-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleAvatarUpload}
                         />
                     </div>
                     <div className="space-y-2">
@@ -118,16 +124,6 @@ function ProfilePage() {
                             checked={user.sfa}
                             onCheckedChange={(checked) => setUser({ ...user, sfa: checked })}
                         />
-                    </div>
-                    <div className="pt-4">
-                        <Button onClick={handleSave} disabled={loading}>
-                            {loading ? 'Saving...' : 'Save Changes'}
-                        </Button>
-                    </div>
-                    <div className="pt-2">
-                        <Button variant="destructive" onClick={handleLogout} disabled={loading}>
-                            {loading ? 'Logging out...' : 'Logout'}
-                        </Button>
                     </div>
                 </CardContent>
             </Card>
