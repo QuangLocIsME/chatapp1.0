@@ -8,30 +8,32 @@ import { API_ROUTES } from "../lib/constants";
 export function withAuth(Component) {
     return function AuthenticatedComponent(props) {
         const router = useRouter();
-        const [isAuthenticated, setIsAuthenticated] = useState(false);
+        const [isAuthenticated, setIsAuthenticated] = useState(null); // Use null as initial state to differentiate loading state
 
         useEffect(() => {
             const checkAuth = async () => {
                 try {
-                    const response = await axiosInstance.get(API_ROUTES.GETUSERDETAILS); // Gọi API
+                    const response = await axiosInstance.get(API_ROUTES.GETUSERDETAILS); // Call the API
                     if (response.data.success) {
                         setIsAuthenticated(true);
                     } else {
-                        router.push("/auth/login");
+                        router.replace("/auth/login");
                     }
                 } catch (error) {
                     console.error("Authentication failed:", error.response?.data?.msg || error.message);
-                    router.push("/auth/login"); // Chuyển hướng nếu không xác thực
+                    router.replace("/auth/login"); // Redirect on authentication failure
                 }
             };
 
             checkAuth();
-        }, []);
+        }, [router]);
 
-        if (!isAuthenticated) {
+        // Show a loading screen until authentication is confirmed or denied
+        if (isAuthenticated === null) {
             return <div>Loading...</div>;
         }
 
+        // Render the wrapped component if authenticated
         return <Component {...props} />;
     };
 }
