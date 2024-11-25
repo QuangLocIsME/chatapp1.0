@@ -14,6 +14,7 @@
   "description": "",
   "dependencies": {
     "chat-app": "file:",
-    "concurrently": "^9.0.1"
+    "concurrently": "^9.0.1",
+    "cross-spawn": "^7.0.6"
   }
 }

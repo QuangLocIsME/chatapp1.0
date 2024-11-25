@@ -18,7 +18,6 @@ async function uploadImageToDiscord(req, res) {
     const filePath = path.resolve(file.path);
 
     try {
-        // Prepare the form data to send to Discord
         const formData = new FormData();
         formData.append('file', fs.createReadStream(filePath));
 
@@ -34,13 +33,10 @@ async function uploadImageToDiscord(req, res) {
             }
         );
 
-        // Extract the file URL from Discord's response
         const imageUrl = response.data.attachments[0]?.url;
 
-        // Clean up the local file after successful upload
         fs.unlinkSync(filePath);
 
-        // Update the user's avatar URL in the database
         const userId = req.user.id;
         await UserModel.findByIdAndUpdate(userId, { avatar: imageUrl });
 
@@ -48,7 +44,6 @@ async function uploadImageToDiscord(req, res) {
     } catch (error) {
         console.error('Error uploading image to Discord:', error);
 
-        // Ensure file cleanup even if an error occurs
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
