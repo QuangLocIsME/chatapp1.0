@@ -1,5 +1,6 @@
 import UserModel from "../models/UserModel.js";
 import bcrypt from "bcrypt";
+import jsonwebtoken from "jsonwebtoken";
 
 async function checkPassword(req, res) {
     try {
@@ -26,7 +27,25 @@ async function checkPassword(req, res) {
             return res.status(400).json({ success: false, message: "Incorrect password" });
         }
 
-        return res.status(200).json({ success: true, message: "Login successful" });
+        if (!user.sfa) {
+            // Generate the token
+            const tokenData = {
+                id: user._id,
+                email: user.email,
+            };
+            const token = jsonwebtoken.sign(tokenData, process.env.JWT_SECRET, { expiresIn: "1h" });
+
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 3600000,
+            });
+
+            return res.status(200).json({ success: true, message: "Login successful", token });
+        }
+
+        return res.status(200).json({ success: true, message: "Password verified, proceed to OTP" });
     } catch (error) {
         console.error("Error during password check:", error);
         res.status(500).json({
