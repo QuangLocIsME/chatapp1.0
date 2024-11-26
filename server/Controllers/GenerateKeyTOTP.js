@@ -5,30 +5,31 @@ import qrcode from 'qrcode';
 
 async function generateKey(req, res) {
     try {
-        // Lấy token từ cookies
+        // Get token from cookies
         const token = req.cookies.token;
 
-        // Kiểm tra và xác thực người dùng
+        // Verify and authenticate user
         const user = await CheckUserDetailWithToken(token);
         if (!user) {
             return res.status(404).json({ msg: 'User not found', error: true });
         }
 
-        // Tạo TOTP key cho người dùng
+        // Generate TOTP key for the user
         const key = Totp.generateKey({
             issuer: 'BuzzChat',
             user: user.email,
         });
 
-        // Lưu secret key vào cơ sở dữ liệu
+        // Save secret key to the database
         user.sfa = true;
         user.key = key.secret;
+        user.qrCodeUrl = key.url;
         await user.save();
 
-        // Tạo QR code cho người dùng quét
+        // Generate QR code for the user to scan
         const qrCodeUrl = await qrcode.toDataURL(key.url);
 
-        // Trả về QR code và secret key
+        // Return QR code and secret key
         return res.status(200).json({
             msg: 'Key generated successfully',
             data: { qrCodeUrl, secret: key.secret },

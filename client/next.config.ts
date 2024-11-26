@@ -1,6 +1,6 @@
 module.exports = {
   images: {
-    domains: ['hoanghamobile.com', 'cdn.discordapp.com'],
+    domains: ['hoanghamobile.com', 'cdn.discordapp.com', 'totp'],
     remotePatterns: [
       {
         protocol: 'https',

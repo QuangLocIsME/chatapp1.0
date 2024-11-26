@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,21 +10,22 @@ import { toast, Toaster } from 'sonner';
 import axiosInstance from '@/lib/axiosInstance';
 import { API_ROUTES } from '@/lib/constants';
 import { withAuth } from '@/HOC/nextwithauth';
+import * as qrcode from 'qrcode';
 
 function ProfilePage() {
     const [user, setUser] = useState({
         name: '',
         email: '',
         avatar: '',
-        sfa: false,  // Trạng thái của 2FA
-        key: '',  // Khóa bí mật TOTP
-        qrCodeUrl: '',  // URL mã QR
+        _id: '',
+        sfa: false,
+        key: '',
+        qrCodeUrl: '',
     });
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [preview, setPreview] = useState<string | null>(null); // Avatar preview state
+    const [preview, setPreview] = useState<string | null>(null);
 
-    // Fetch user data on page load
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -42,6 +42,18 @@ function ProfilePage() {
         };
 
         fetchUserData();
+    }, []);
+
+    const generateQRCode = useCallback(async (otpAuthUrl: string) => {
+        try {
+            // Convert otpauth URL to data URL using qrcode library
+            const dataUrl = await qrcode.toDataURL(otpAuthUrl);
+            return dataUrl;
+        } catch (err) {
+            console.error('Error generating QR code:', err);
+            toast.error('Failed to generate QR code');
+            return null;
+        }
     }, []);
 
     // Handle avatar upload
@@ -80,16 +92,20 @@ function ProfilePage() {
     const handleEnable2FA = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.post(API_ROUTES.GENERATEKEY);
+            const response = await axiosInstance.post(API_ROUTES.GENERATEKEY, { userId: user._id });
             if (response.data.success) {
-                const { qrCodeUrl, secret } = response.data.data;
-                setUser((prevUser) => ({
-                    ...prevUser,
-                    key: secret,
-                    qrCodeUrl,
-                    sfa: true,
-                }));
-                toast.success('2FA is enabled. Please scan the QR code with your authenticator app.');
+                const { otpAuthUrl, secret } = response.data.data;
+                // Generate QR code data URL from otpauth URL
+                const qrCodeDataUrl = await generateQRCode(otpAuthUrl);
+                if (qrCodeDataUrl) {
+                    setUser((prevUser) => ({
+                        ...prevUser,
+                        key: secret,
+                        qrCodeUrl: qrCodeDataUrl, // Use the data URL instead of otpauth URL
+                        sfa: true,
+                    }));
+                    toast.success('2FA is enabled. Please scan the QR code with your authenticator app.');
+                }
             } else {
                 toast.error(response.data.msg || 'Failed to enable 2FA');
             }
@@ -105,7 +121,7 @@ function ProfilePage() {
     const handleDisable2FA = async () => {
         setLoading(true);
         try {
-            const response = await axiosInstance.post(API_ROUTES.DISABLE2FA);
+            const response = await axiosInstance.post(API_ROUTES.DISABLE2FA, { userId: user._id });
             if (response.data.success) {
                 setUser((prevUser) => ({
                     ...prevUser,
@@ -126,43 +142,23 @@ function ProfilePage() {
     };
 
     // Handle switch for 2FA
-    // Xử lý thay đổi trạng thái của Switch
     const handleSFAChange = async (checked: boolean) => {
-        setLoading(true); // Bắt đầu loading
+        setLoading(true);
 
         if (checked) {
-            // Bật 2FA
             try {
-                await handleEnable2FA(); // Chờ cho đến khi bật 2FA xong
-                setUser((prevUser) => ({
-                    ...prevUser,
-                    sfa: true, // Cập nhật trạng thái 2FA thành true sau khi bật thành công
-                }));
+                await handleEnable2FA();
             } catch (error) {
                 toast.error('Failed to enable 2FA');
-                setUser((prevUser) => ({
-                    ...prevUser,
-                    sfa: false, // Nếu có lỗi, quay lại trạng thái ban đầu
-                }));
             }
         } else {
-            // Tắt 2FA
             try {
-                await handleDisable2FA(); // Chờ cho đến khi tắt 2FA xong
-                setUser((prevUser) => ({
-                    ...prevUser,
-                    sfa: false, // Cập nhật trạng thái 2FA thành false sau khi tắt thành công
-                }));
+                await handleDisable2FA();
             } catch (error) {
                 toast.error('Failed to disable 2FA');
-                setUser((prevUser) => ({
-                    ...prevUser,
-                    sfa: true, // Nếu có lỗi, quay lại trạng thái ban đầu
-                }));
             }
         }
     };
-
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -174,7 +170,7 @@ function ProfilePage() {
                     {/* Avatar */}
                     <div className="flex flex-col items-center space-y-4 relative group">
                         <label htmlFor="avatar-upload" className="relative cursor-pointer">
-                            <Image
+                            <img
                                 src={preview || user.avatar || '/placeholder-avatar.png'}
                                 alt="User Avatar"
                                 width={120}
@@ -230,9 +226,12 @@ function ProfilePage() {
                     {/* QR Code and Secret for 2FA */}
                     {user.sfa && user.qrCodeUrl && (
                         <div className="text-center">
-                            <p className="font-semibold text-gray-700">Scan the QR code with your authenticator app</p>
-                            <Image src={user.qrCodeUrl} alt="QR Code" width={200} height={200} />
-                            <p className="mt-4">Secret: {user.key}</p>
+                            <p className="font-semibold text-gray-700 mb-2">Scan the QR code with your authenticator app</p>
+                            <div className="bg-white p-4 inline-block rounded-lg shadow-md">
+                                <img src={user.qrCodeUrl} alt="QR Code" width={200} height={200} />
+                            </div>
+                            <p className="mt-4 text-sm text-gray-600">Secret: <span className="font-mono bg-gray-100 p-1 rounded">{user.key}</span></p>
+                            <p className="mt-2 text-xs text-gray-500">Keep this secret safe. You'll need it if you lose access to your authenticator app.</p>
                         </div>
                     )}
 
