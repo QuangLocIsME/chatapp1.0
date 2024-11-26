@@ -1,7 +1,6 @@
-'use client';
-
+'use client'
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Import for routing
+import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,18 +9,20 @@ import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
 import axiosInstance from '@/lib/axiosInstance';
 import { toast, Toaster } from "sonner";
 import { API_ROUTES } from '@/lib/constants';
-import axios from 'axios';
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 
 export default function LoginComponent() {
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [userId, setUserId] = useState<string | null>(null);
+    const [otp, setOtp] = useState('');
+    const [userId, setUserId] = useState(null);
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState(1);
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [name, setName] = useState('');
+    const [sfa, setSfa] = useState(false); // To track if 2FA is enabled
 
     const router = useRouter();
 
@@ -35,9 +36,11 @@ export default function LoginComponent() {
     const isEmailValid = () => /\S+@\S+\.\S+/.test(email);
     const isPasswordValid = () => password.trim() !== '' && password.length >= 8;
 
-    const handleEmailCheck = async (e: React.FormEvent) => {
+    // Function to handle email check and proceed to the next step
+    const handleEmailCheck = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
+
         if (!isEmailValid()) {
             setError("Please enter a valid email address.");
             return;
@@ -47,11 +50,11 @@ export default function LoginComponent() {
         try {
             const response = await axiosInstance.post(API_ROUTES.CHECKMAIL, { email });
             if (response.status === 200) {
-                const userId = response.data.data._id;
-                const name = response.data.data.name;
-                setUserId(userId);
+                const { _id, name, sfa } = response.data.data;
+                setUserId(_id);
                 setName(name);
-                setStep(2);
+                setSfa(sfa);
+                setStep(2); // Move to password step
                 toast.success("Email Verified", { description: "Enter your password to continue." });
             } else {
                 throw new Error('Invalid response from server');
@@ -63,7 +66,8 @@ export default function LoginComponent() {
         }
     };
 
-    const handleLogin = async (e: React.FormEvent) => {
+    // Function to handle login with password verification
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
 
@@ -79,12 +83,38 @@ export default function LoginComponent() {
 
         setLoading(true);
         try {
-            const response = await axiosInstance.post(API_ROUTES.CHECKPASSWORD, { password, userId }, { withCredentials: true });
+            const response = await axiosInstance.post(API_ROUTES.CHECKPASSWORD, { password, userId });
             if (response.status === 200 && response.data.success) {
-                toast.success("Login Successful", { description: `Welcome back, ${name}!` });
-                router.push('/profile'); // Redirect to profile page
+                if (sfa) {
+                    setStep(3); // Move to OTP step
+                    toast.success("Password Verified", { description: "Enter your OTP to continue." });
+                } else {
+                    toast.success("Login Successful", { description: `Welcome back, ${name}!` });
+                    router.push("/profile");
+                }
             } else {
-                setError('Invalid credentials. Please try again.');
+                setError('Invalid Credentials. Please try again.');
+            }
+        } catch (error) {
+            setError((error as any).response?.data?.message || 'An error occurred. Please try again later.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Function to handle OTP submission
+    const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setError('');
+
+        setLoading(true);
+        try {
+            const response = await axiosInstance.post(API_ROUTES.VALIDATEOTP, { otp, userId }, { withCredentials: true });
+            if (response.status === 200 && response.data.success) {
+                toast.success("OTP Verified", { description: `Welcome back, ${name}!` });
+                router.push("/profile");
+            } else {
+                setError('Invalid OTP. Please try again.');
             }
         } catch (error) {
             setError((error as any).response?.data?.message || 'An error occurred. Please try again later.');
@@ -98,10 +128,10 @@ export default function LoginComponent() {
             <Card className={`w-full max-w-md ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} transition-colors duration-500`}>
                 <CardHeader>
                     <CardTitle className="text-3xl font-extrabold text-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                        {step === 1 ? 'Login' : 'Welcome Back'}
+                        {step === 1 ? 'Login' : step === 2 ? 'Welcome Back' : 'Enter OTP'}
                     </CardTitle>
                     <CardDescription className={`text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {step === 1 ? 'Enter your email to continue.' : 'Enter your password.'}
+                        {step === 1 ? 'Enter your email to continue.' : step === 2 ? 'Enter your password.' : 'Enter the OTP sent to your email.'}
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -123,7 +153,7 @@ export default function LoginComponent() {
                                 {loading ? 'Checking...' : 'Continue'}
                             </Button>
                         </form>
-                    ) : (
+                    ) : step === 2 ? (
                         <form onSubmit={handleLogin}>
                             <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
@@ -146,6 +176,29 @@ export default function LoginComponent() {
                             </div>
                             <Button type="submit" className="w-full mt-4" disabled={loading}>
                                 {loading ? 'Logging in...' : 'Log In'}
+                            </Button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleOtpSubmit}>
+                            <div className="space-y-2">
+                                <Label htmlFor="otp">OTP</Label>
+                                <InputOTP maxLength={6} value={otp} onChange={(newValue) => setOtp(newValue)}>
+                                    <InputOTPGroup>
+                                        <InputOTPSlot index={0} />
+                                        <InputOTPSlot index={1} />
+                                        <InputOTPSlot index={2} />
+                                    </InputOTPGroup>
+                                    <InputOTPSeparator />
+                                    <InputOTPGroup>
+                                        <InputOTPSlot index={3} />
+                                        <InputOTPSlot index={4} />
+                                        <InputOTPSlot index={5} />
+                                    </InputOTPGroup>
+                                </InputOTP>
+                                {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+                            </div>
+                            <Button type="submit" className="w-full mt-4" disabled={loading}>
+                                {loading ? 'Verifying...' : 'Verify OTP'}
                             </Button>
                         </form>
                     )}

@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
     avatar: { type: String, default: "https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/07/sus-la-gi-1.jpg" },
     sfa: { type: Boolean, default: false },
     key: { type: String, default: null },
+    qrCodeUrl: { type: String, default: null },
 });
 
 const UserModel = mongoose.model('User', UserSchema);
