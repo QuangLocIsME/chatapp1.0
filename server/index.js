@@ -6,6 +6,7 @@ import connectDB from './config/connectDB.js';
 import AuthRouter from './router/index.js';
 import ProfileRouter from './router/Profile.js';
 import cookieParser from 'cookie-parser';
+import sfarouter from './router/2fa.js';
 dotenv.config();
 
 const app = express();
@@ -24,6 +25,7 @@ connectDB();
 // API endpoints
 app.use('/api/auth', AuthRouter);
 app.use('/api/profile', ProfileRouter);
+app.use('/api/2fa', sfarouter);
 
 
 app.listen(port, () => console.log(`Server is running on port ${port}!`));

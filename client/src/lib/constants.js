@@ -1,3 +1,5 @@
+
+
 // lib/constants.js
 export const API_ROUTES = {
     REGISTER: '/api/auth/register',
@@ -8,6 +10,10 @@ export const API_ROUTES = {
     LOGOUT: '/api/auth/logout',
     UPLOAD_AVATAR: '/api/profile/upload-avatar',
     CHECK: (id) => '/api/check/${id}',
+    GENERATEKEY: '/api/2fa/generate-key',
+    DISABLE2FA: '/api/2fa/disable-2fa',
+    VALIDATEOTP: '/api/2fa/validate-otp',
+    GENERATEQR: '/api/2fa/generateqr',
 };
 
 export const MESSAGES = {

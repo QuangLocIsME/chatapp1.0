@@ -17,58 +17,80 @@ function ProfilePage() {
         name: '',
         email: '',
         avatar: '',
-        sfa: false,
+        sfa: false,  // Trạng thái của 2FA
+        key: '',  // Khóa bí mật TOTP
+        qrCodeUrl: '',  // URL mã QR
     });
-    const [loading, setLoading] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const [preview, setPreview] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    // Fetch user data when the component loads
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 const response = await axiosInstance.get(API_ROUTES.GETUSERDETAILS);
                 if (response.data.success) {
-                    setUser(response.data.data); // Load user data into state
+                    setUser(response.data.data);
                 } else {
                     toast.error(response.data.msg || 'Failed to fetch user details');
                 }
             } catch (error) {
                 toast.error('Unexpected error occurred');
                 console.error(error);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchUserData();
     }, []);
 
-    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files) return;
-        const file = files[0];
-        if (!file) return;
-        const previewUrl = URL.createObjectURL(file);
-        setPreview(previewUrl);
-        const formData = new FormData();
-        formData.append('avatar', file);
-
-        setUploading(true);
+    const handleEnable2FA = async () => {
         try {
-            const response = await axiosInstance.post(API_ROUTES.UPLOAD_AVATAR, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const response = await axiosInstance.post(API_ROUTES.GENERATEKEY);
+            if (response.data.success) {
+                // Lưu lại secret key và tạo mã QR
+                setUser({ ...user, key: response.data.data.secret });
+                const qrCodeUrl = response.data.data.qrCodeUrl;  // Đảm bảo lấy đúng URL mã QR từ response
 
-            if (response.data && response.data.url) {
-                setUser((prevUser) => ({ ...prevUser, avatar: response.data.url }));
-                toast.success('Avatar uploaded successfully');
+                // Cập nhật URL mã QR vào state
+                setUser((prevUser) => ({
+                    ...prevUser,
+                    qrCodeUrl: qrCodeUrl,
+                    sfa: true, // Bật 2FA
+                }));
+
+                toast.success('2FA is enabled. Please scan the QR code with your authenticator app.');
             } else {
-                throw new Error(response.data.msg || 'Failed to upload avatar');
+                toast.error(response.data.msg || 'Failed to enable 2FA');
             }
         } catch (error) {
-            console.error('Error uploading avatar:', error);
-            toast.error('Error uploading avatar');
-        } finally {
-            setUploading(false);
+            console.error(error);
+            toast.error('Unexpected error occurred while enabling 2FA');
+        }
+    };
+
+    const handleDisable2FA = async () => {
+        try {
+            const response = await axiosInstance.post(API_ROUTES.DISABLE2FA);
+            if (response.data.success) {
+                // Reset thông tin 2FA
+                setUser((prevUser) => ({ ...prevUser, sfa: false, key: '', qrCodeUrl: '' }));
+                toast.success('2FA has been disabled.');
+            } else {
+                toast.error(response.data.msg || 'Failed to disable 2FA');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('Unexpected error occurred while disabling 2FA');
+        }
+    };
+
+    const handleSFAChange = async (checked: boolean) => {
+        if (checked) {
+            // Bật 2FA
+            await handleEnable2FA();
+        } else {
+            // Tắt 2FA
+            await handleDisable2FA();
         }
     };
 
@@ -97,7 +119,6 @@ function ProfilePage() {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={handleAvatarUpload}
                         />
                     </div>
                     <div className="space-y-2">
@@ -122,9 +143,18 @@ function ProfilePage() {
                         <Switch
                             id="sfa"
                             checked={user.sfa}
-                            onCheckedChange={(checked) => setUser({ ...user, sfa: checked })}
+                            onCheckedChange={handleSFAChange}
                         />
                     </div>
+
+                    {/* Hiển thị mã QR khi 2FA được bật */}
+                    {user.sfa && user.qrCodeUrl && (
+                        <div className="text-center">
+                            <p className="font-semibold text-gray-700">Scan the QR code with your authenticator app</p>
+                            <Image src={user.qrCodeUrl} alt="QR Code" width={200} height={200} />
+                            <p className="mt-4">Secret: {user.key}</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             <Toaster />
