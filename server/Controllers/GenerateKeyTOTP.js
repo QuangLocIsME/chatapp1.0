@@ -1,7 +1,7 @@
 import { Totp } from 'time2fa';
 import UserModel from '../models/UserModel.js';
 import CheckUserDetailWithToken from '../helpers/CheckUserDetailWithToken.js';
-import qrcode from 'qrcode';
+import * as qrcode from "qrcode";
 
 async function generateKey(req, res) {
     try {
@@ -20,14 +20,16 @@ async function generateKey(req, res) {
             user: user.email,
         });
 
+
         // Save secret key to the database
         user.sfa = true;
         user.key = key.secret;
-        user.qrCodeUrl = key.url;
         await user.save();
 
         // Generate QR code for the user to scan
         const qrCodeUrl = await qrcode.toDataURL(key.url);
+        user.qrCodeUrl = qrCodeUrl;
+        await user.save();
 
         // Return QR code and secret key
         return res.status(200).json({

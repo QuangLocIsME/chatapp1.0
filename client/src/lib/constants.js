@@ -11,7 +11,6 @@ export const API_ROUTES = {
     GENERATEKEY: '/api/2fa/generate-key',
     DISABLE2FA: '/api/2fa/disable-2fa',
     VALIDATEOTP: '/api/2fa/validate-otp',
-    GENERATEQR: '/api/2fa/generateqr',
     VERIFY: '/api/2fa/verify',
 };
 

@@ -11,7 +11,7 @@ import { toast, Toaster } from 'sonner';
 import axiosInstance from '@/lib/axiosInstance';
 import { API_ROUTES } from '@/lib/constants';
 import { withAuth } from '@/HOC/nextwithauth';
-import * as qrcode from "qrcode";
+import qrcode from 'qrcode';
 
 function ProfilePage() {
     const [user, setUser] = useState({
@@ -23,10 +23,12 @@ function ProfilePage() {
         key: '',
         qrCodeUrl: '',
     });
+
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
 
+    // Fetch user details on page load
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -44,8 +46,6 @@ function ProfilePage() {
 
         fetchUserData();
     }, []);
-
-
 
     // Handle avatar upload
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +79,7 @@ function ProfilePage() {
         }
     };
 
-    // Handle 2FA Enable
+    // Handle enabling 2FA
     const handleEnable2FA = async () => {
         setLoading(true);
         try {
@@ -107,7 +107,8 @@ function ProfilePage() {
         }
     };
 
-    // Handle 2FA Disable
+
+    // Handle disabling 2FA
     const handleDisable2FA = async () => {
         setLoading(true);
         try {
@@ -131,24 +132,22 @@ function ProfilePage() {
         }
     };
 
-    // Handle switch for 2FA
     const handleSFAChange = async (checked: boolean) => {
-        setLoading(true);
+        setLoading(true); // Set loading state to true
 
-        if (checked) {
-            try {
+        try {
+            if (checked) {
                 await handleEnable2FA();
-            } catch (error) {
-                toast.error('Failed to enable 2FA');
-            }
-        } else {
-            try {
+            } else {
                 await handleDisable2FA();
-            } catch (error) {
-                toast.error('Failed to disable 2FA');
             }
+        } catch (error) {
+            toast.error(checked ? 'Failed to enable 2FA' : 'Failed to disable 2FA');
+        } finally {
+            setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -161,6 +160,7 @@ function ProfilePage() {
                     <div className="flex flex-col items-center space-y-4 relative group">
                         <label htmlFor="avatar-upload" className="relative cursor-pointer">
                             <Image
+                                priority
                                 src={preview || user.avatar || '/placeholder-avatar.png'}
                                 alt="User Avatar"
                                 width={120}
@@ -239,4 +239,3 @@ function ProfilePage() {
 }
 
 export default withAuth(ProfilePage);
-
