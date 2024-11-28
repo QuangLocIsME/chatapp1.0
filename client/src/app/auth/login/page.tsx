@@ -106,11 +106,14 @@ export default function LoginComponent() {
     const handleOtpSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError('');
-
+        if (otp.length !== 6) {
+            setError('OTP must be exactly 6 digits.');
+            return;
+        }
         setLoading(true);
         try {
             const response = await axiosInstance.post(API_ROUTES.VALIDATEOTP, { otp, userId }, { withCredentials: true });
-            if (response.status === 200 && response.data.success) {
+            if (response.status === 200 && !response.data.success) {
                 toast.success("OTP Verified", { description: `Welcome back, ${name}!` });
                 router.push("/profile");
             } else {

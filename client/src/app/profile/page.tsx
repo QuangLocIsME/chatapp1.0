@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,7 @@ import { toast, Toaster } from 'sonner';
 import axiosInstance from '@/lib/axiosInstance';
 import { API_ROUTES } from '@/lib/constants';
 import { withAuth } from '@/HOC/nextwithauth';
-import * as qrcode from 'qrcode';
+import * as qrcode from "qrcode";
 
 function ProfilePage() {
     const [user, setUser] = useState({
@@ -44,17 +45,7 @@ function ProfilePage() {
         fetchUserData();
     }, []);
 
-    const generateQRCode = useCallback(async (otpAuthUrl: string) => {
-        try {
-            // Convert otpauth URL to data URL using qrcode library
-            const dataUrl = await qrcode.toDataURL(otpAuthUrl);
-            return dataUrl;
-        } catch (err) {
-            console.error('Error generating QR code:', err);
-            toast.error('Failed to generate QR code');
-            return null;
-        }
-    }, []);
+
 
     // Handle avatar upload
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -64,7 +55,7 @@ function ProfilePage() {
         if (!file) return;
 
         const previewUrl = URL.createObjectURL(file);
-        setPreview(previewUrl); // Show preview before upload
+        setPreview(previewUrl);
 
         const formData = new FormData();
         formData.append('avatar', file);
@@ -94,14 +85,13 @@ function ProfilePage() {
         try {
             const response = await axiosInstance.post(API_ROUTES.GENERATEKEY, { userId: user._id });
             if (response.data.success) {
-                const { otpAuthUrl, secret } = response.data.data;
-                // Generate QR code data URL from otpauth URL
-                const qrCodeDataUrl = await generateQRCode(otpAuthUrl);
-                if (qrCodeDataUrl) {
+                const { qrCodeUrl, secret } = response.data.data;
+
+                if (qrCodeUrl) {
                     setUser((prevUser) => ({
                         ...prevUser,
                         key: secret,
-                        qrCodeUrl: qrCodeDataUrl, // Use the data URL instead of otpauth URL
+                        qrCodeUrl: qrCodeUrl,
                         sfa: true,
                     }));
                     toast.success('2FA is enabled. Please scan the QR code with your authenticator app.');
@@ -170,7 +160,7 @@ function ProfilePage() {
                     {/* Avatar */}
                     <div className="flex flex-col items-center space-y-4 relative group">
                         <label htmlFor="avatar-upload" className="relative cursor-pointer">
-                            <img
+                            <Image
                                 src={preview || user.avatar || '/placeholder-avatar.png'}
                                 alt="User Avatar"
                                 width={120}
@@ -228,7 +218,7 @@ function ProfilePage() {
                         <div className="text-center">
                             <p className="font-semibold text-gray-700 mb-2">Scan the QR code with your authenticator app</p>
                             <div className="bg-white p-4 inline-block rounded-lg shadow-md">
-                                <img src={user.qrCodeUrl} alt="QR Code" width={200} height={200} />
+                                <Image src={user.qrCodeUrl} alt="QR Code" width={200} height={200} />
                             </div>
                             <p className="mt-4 text-sm text-gray-600">Secret: <span className="font-mono bg-gray-100 p-1 rounded">{user.key}</span></p>
                             <p className="mt-2 text-xs text-gray-500">Keep this secret safe. You'll need it if you lose access to your authenticator app.</p>
@@ -249,3 +239,4 @@ function ProfilePage() {
 }
 
 export default withAuth(ProfilePage);
+
