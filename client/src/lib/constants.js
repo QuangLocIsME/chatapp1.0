@@ -5,6 +5,7 @@ export const API_ROUTES = {
     CHECKPASSWORD: '/api/auth/check-password',
     GETUSERDETAILS: '/api/auth/check-user',
     UPDATE: '/api/profile/update',
+    UPDATEPASSWORD: '/api/profile/update-password',
     LOGOUT: '/api/auth/logout',
     UPLOAD_AVATAR: '/api/profile/upload-avatar',
     CHECK: (id) => `/api/check/${id}`,

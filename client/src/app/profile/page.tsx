@@ -11,7 +11,8 @@ import { toast, Toaster } from 'sonner';
 import axiosInstance from '@/lib/axiosInstance';
 import { API_ROUTES } from '@/lib/constants';
 import { withAuth } from '@/HOC/nextwithauth';
-import qrcode from 'qrcode';
+import { Eye, EyeOff, Edit2, Check, Mail, Phone, MapPin } from 'lucide-react'
+
 
 function ProfilePage() {
     const [user, setUser] = useState({
@@ -20,14 +21,50 @@ function ProfilePage() {
         avatar: '',
         _id: '',
         sfa: false,
+        password: '',
         key: '',
         qrCodeUrl: '',
     });
 
+
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
+    const [editingName, setEditingName] = useState(false);
+    const [editingPassword, setEditingPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    //Handle Save
+    const handleSaveField = async (field: 'name' | 'password') => {
+        setLoading(true);
+        try {
+            let response;
+            if (field === 'password') {
+                response = await axiosInstance.post(API_ROUTES.UPDATEPASSWORD, {
+                    password: user.password,
+                });
+            } else {
+                response = await axiosInstance.post(API_ROUTES.UPDATE, {
+                    [field]: user[field],
+                });
+            }
 
+            if (response.data.success) {
+                toast.success(`${field.charAt(0).toUpperCase() + field.slice(1)} updated successfully`);
+                if (field === 'name') setEditingName(false);
+                if (field === 'password') {
+                    setEditingPassword(false);
+                    setUser(prev => ({ ...prev, password: '' }));
+                }
+            } else {
+                throw new Error(response.data.msg || `Failed to update ${field}`);
+            }
+        } catch (error) {
+            console.error(`Error updating ${field}:`, error);
+            toast.error(`Error updating ${field}`);
+        } finally {
+            setLoading(false);
+        }
+    };
     // Fetch user details on page load
     useEffect(() => {
         const fetchUserData = async () => {
@@ -183,12 +220,22 @@ function ProfilePage() {
                     {/* Name Input */}
                     <div className="space-y-2">
                         <Label htmlFor="name">Name</Label>
-                        <Input
-                            disabled
-                            id="name"
-                            value={user.name}
-                            onChange={(e) => setUser({ ...user, name: e.target.value })}
-                        />
+                        <div className="relative">
+                            <Input
+                                id="name"
+                                value={user.name}
+                                onChange={(e) => setUser({ ...user, name: e.target.value })}
+                                disabled={!editingName}
+                            />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                                onClick={() => editingName ? handleSaveField('name') : setEditingName(true)}
+                            >
+                                {editingName ? <Check className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Email Input */}
@@ -201,6 +248,35 @@ function ProfilePage() {
                             value={user.email}
                             onChange={(e) => setUser({ ...user, email: e.target.value })}
                         />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <div className="relative">
+                            <Input
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                value={user.password}
+                                onChange={(e) => setUser({ ...user, password: e.target.value })}
+                                disabled={!editingPassword}
+                                placeholder={editingPassword ? 'Enter new password' : '••••••••'}
+                            />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-10 top-1/2 transform -translate-y-1/2"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                                onClick={() => editingPassword ? handleSaveField('password') : setEditingPassword(true)}
+                            >
+                                {editingPassword ? <Check className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Switch for 2FA */}
