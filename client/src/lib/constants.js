@@ -13,6 +13,7 @@ export const API_ROUTES = {
     DISABLE2FA: '/api/2fa/disable-2fa',
     VALIDATEOTP: '/api/2fa/validate-otp',
     VERIFY: '/api/2fa/verify',
+    SEARCH_USER: '/api/handle/search',
 };
 
 export const MESSAGES = {

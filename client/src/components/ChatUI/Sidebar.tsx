@@ -4,6 +4,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { UserPlus, Settings, User, LogOut, Users } from 'lucide-react'
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import AddFriend from '@/components/Addfriend/Addfriend'
+import CreateGroup from '@/components/Creategroup/Creategroup'
+
 
 export default function Sidebar() {
     const friends = [
@@ -13,8 +16,8 @@ export default function Sidebar() {
     ]
 
     const groups = [
-        { id: 1, name: "General", avatar: "/general.jpg" },
-        { id: 2, name: "Tech Talk", avatar: "/tech.jpg" },
+        { id: 1, name: "Nhóm chung", avatar: "/general.jpg" },
+        { id: 2, name: "Nhóm công nghệ", avatar: "/tech.jpg" },
     ]
 
     return (
@@ -39,7 +42,7 @@ export default function Sidebar() {
                         <h2 className="text-sm font-semibold mb-2">Group Chats</h2>
                         {groups.map((group) => (
                             <Button key={group.id} variant="ghost" className="w-full justify-start mb-1">
-                                <Avatar className="h-6 w-6 mr-2">
+                                <Avatar className="h-8 w-8 mr-2">
                                     <AvatarImage src={group.avatar} alt={group.name} />
                                     <AvatarFallback>{group.name[0]}</AvatarFallback>
                                 </Avatar>
@@ -50,24 +53,9 @@ export default function Sidebar() {
                 </div>
             </ScrollArea>
             <div className="space-y-2">
-                <Link href="/add-friend">
-                    <Button variant="outline" className="w-full justify-start">
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Add Friend
-                    </Button>
-                </Link>
-                <Link href="/create-group">
-                    <Button variant="outline" className="w-full justify-start">
-                        <Users className="mr-2 h-4 w-4" />
-                        Create Group
-                    </Button>
-                </Link>
-                <Link href="/settings">
-                    <Button variant="outline" className="w-full justify-start">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                    </Button>
-                </Link>
+                <AddFriend />
+                <CreateGroup />
+
                 <Link href="/profile">
                     <Button variant="outline" className="w-full justify-start">
                         <User className="mr-2 h-4 w-4" />
