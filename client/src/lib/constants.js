@@ -14,6 +14,9 @@ export const API_ROUTES = {
     VALIDATEOTP: '/api/2fa/validate-otp',
     VERIFY: '/api/2fa/verify',
     SEARCH_USER: '/api/handle/search',
+    CHAT: '/api/handle/chat',
+    GET_CONVERSATION: '/api/handle/message',
+    GET_ALL_MESSAGES: '/api/handle/allmessage',
 };
 
 export const MESSAGES = {

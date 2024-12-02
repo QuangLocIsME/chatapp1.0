@@ -55,9 +55,27 @@ export default function AddFriend() {
         }
     };
 
-    const handleStartChat = () => {
-        console.log("Starting chat with:", searchResult?.name);
-        // Implement your chat initiation logic here
+    const handleStartChat = async () => {
+        if (!searchResult) {
+            setError("User not found");
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await axiosInstance.post(API_ROUTES.CHAT, { email: searchResult.email });
+            if (response.data) {
+                console.log('Chat started', response.data);
+
+            }
+        }
+        catch (err) {
+            setError("An error occurred while starting the chat.");
+            console.error(err);
+        }
+        finally {
+            setLoading(false);
+        }
     };
 
     return (

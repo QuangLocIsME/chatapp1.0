@@ -1,3 +1,8 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import axiosInstance from '@/lib/axiosInstance';
+import { API_ROUTES } from '@/lib/constants';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -7,8 +12,36 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import AddFriend from '@/components/Addfriend/Addfriend'
 import CreateGroup from '@/components/Creategroup/Creategroup'
 
+interface Conversation {
+    partner: {
+        _id: string;
+        name: string;
+        avatar: string;
+    };
+    lastMessage: string;
+    lastMessageTimestamp: string;
+}
 
-export default function Sidebar() {
+interface SidebarProps {
+    onSelectConversation: (recipientId: string) => void;
+}
+
+export default function Sidebar({ onSelectConversation }: SidebarProps) {
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+
+    useEffect(() => {
+        const fetchConversations = async () => {
+            try {
+                const response = await axiosInstance.get(API_ROUTES.GET_ALL_MESSAGES);
+                setConversations(response.data);
+            } catch (error) {
+                console.error("Error fetching conversations:", error);
+            }
+        };
+
+        fetchConversations();
+    }, []);
+
     const friends = [
         { id: 1, name: "Alice", avatar: "/alice.jpg" },
         { id: 2, name: "Bob", avatar: "/bob.jpg" },
@@ -28,13 +61,23 @@ export default function Sidebar() {
                 <div className="space-y-4">
                     <div>
                         <h2 className="text-sm font-semibold mb-2">Direct Messages</h2>
-                        {friends.map((friend) => (
-                            <Button key={friend.id} variant="ghost" className="w-full justify-start mb-1">
+                        {conversations.map((conv) => (
+                            <Button
+                                key={conv.partner._id}
+                                variant="ghost"
+                                className="w-full justify-start mb-1"
+                                onClick={() => onSelectConversation(conv.partner._id)}
+                            >
                                 <Avatar className="h-6 w-6 mr-2">
-                                    <AvatarImage src={friend.avatar} alt={friend.name} />
-                                    <AvatarFallback>{friend.name[0]}</AvatarFallback>
+                                    <AvatarImage src={conv.partner.avatar} alt={conv.partner.name} />
+                                    <AvatarFallback>{conv.partner.name[0]}</AvatarFallback>
                                 </Avatar>
-                                {friend.name}
+                                <div className="flex flex-col items-start">
+                                    <span>{conv.partner.name}</span>
+                                    <span className="text-xs text-gray-500 truncate w-40">
+                                        {conv.lastMessage}
+                                    </span>
+                                </div>
                             </Button>
                         ))}
                     </div>
