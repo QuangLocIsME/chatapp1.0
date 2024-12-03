@@ -17,6 +17,7 @@ export const API_ROUTES = {
     CHAT: '/api/handle/chat',
     GET_CONVERSATION: '/api/handle/message',
     GET_ALL_MESSAGES: '/api/handle/allmessage',
+    SEND_MESSAGE: '/api/handle/send-message',
 };
 
 export const MESSAGES = {

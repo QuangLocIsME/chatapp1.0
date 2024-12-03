@@ -7,17 +7,15 @@ const getAllMessage = async (req, res) => {
     const user = await CheckUserDetailWithToken(token);
 
     try {
-        // Find all messages where user is either sender or recipient
         const messages = await Messages.find({
             $or: [
                 { sender: user._id },
                 { recipient: user._id },
             ],
         })
-            .sort({ timestamp: -1 }) // Sort by the most recent message first
-            .populate('sender recipient'); // Populate sender and recipient details
+            .sort({ timestamp: -1 })
+            .populate('sender recipient');
 
-        // Group messages by conversation (sender/recipient) and take the last one
         const conversations = {};
 
         messages.forEach((message) => {
@@ -26,8 +24,22 @@ const getAllMessage = async (req, res) => {
                 : message.sender._id.toString();
 
             if (!conversations[partnerId]) {
+                const partnerInfo = message.sender._id.toString() === user._id.toString()
+                    ? {
+                        _id: message.recipient._id,
+                        name: message.recipient.name,
+                        email: message.recipient.email,
+                        avatar: message.recipient.avatar
+                    }
+                    : {
+                        _id: message.sender._id,
+                        name: message.sender.name,
+                        email: message.sender.email,
+                        avatar: message.sender.avatar
+                    };
+
                 conversations[partnerId] = {
-                    partner: message.sender._id.toString() === user._id.toString() ? message.recipient : message.sender,
+                    partner: partnerInfo,
                     lastMessage: message.content,
                     lastMessageTimestamp: message.timestamp,
                     avatar: message.sender._id.toString() === user._id.toString() ? message.recipient.avatar : message.sender.avatar

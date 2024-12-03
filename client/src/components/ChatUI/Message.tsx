@@ -13,22 +13,29 @@ interface MessageProps {
 
 export default function Message({ content, sender, isOwnMessage, timestamp }: MessageProps) {
     return (
-        <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-4`}>
+        <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} items-end space-x-2`}>
             {!isOwnMessage && (
-                <Avatar className="h-8 w-8 mr-2">
+                <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage src={sender.avatar} alt={sender.name} />
                     <AvatarFallback>{sender.name[0]}</AvatarFallback>
                 </Avatar>
             )}
-            <div className={`rounded-lg p-3 max-w-[70%] ${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}>
-                {!isOwnMessage && <p className="font-semibold text-sm mb-1">{sender.name}</p>}
-                <p>{content}</p>
-                <p className={`text-xs mt-1 ${isOwnMessage ? 'text-blue-100' : 'text-gray-500'}`}>
+            <div className={`max-w-[70%] ${isOwnMessage ? 'ml-auto' : 'mr-auto'}`}>
+                {!isOwnMessage && (
+                    <p className="text-sm text-muted-foreground mb-1">{sender.name}</p>
+                )}
+                <div className={`rounded-2xl px-4 py-2 ${isOwnMessage
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground'
+                    }`}>
+                    <p className="text-sm">{content}</p>
+                </div>
+                <p className={`text-xs mt-1 ${isOwnMessage ? 'text-right' : ''} text-muted-foreground`}>
                     {format(timestamp, 'HH:mm')}
                 </p>
             </div>
             {isOwnMessage && (
-                <Avatar className="h-8 w-8 ml-2">
+                <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage src={sender.avatar} alt={sender.name} />
                     <AvatarFallback>{sender.name[0]}</AvatarFallback>
                 </Avatar>

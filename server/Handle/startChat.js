@@ -44,7 +44,7 @@ const startChat = async (req, res) => {
             sender: user._id,
             recipient: recipient._id,
             messageType: "text",
-            content: "Hi! Let's start a conversation.", // Nội dung tin nhắn khởi tạo
+            content: "Hi! Let's start a conversation.",
             timestamp: new Date()
         });
 

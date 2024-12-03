@@ -4,10 +4,12 @@ import cors from 'cors';
 import connectDB from './config/connectDB.js';
 // Import the router modules
 import AuthRouter from './router/index.js';
-import ProfileRouter from './router/Profile.js';
+import ProfileRouter from './router/profile.js';
 import cookieParser from 'cookie-parser';
 import sfarouter from './router/2fa.js';
 import handleRounter from './router/handle.js';
+import { createServer } from 'http';
+import { initSocket } from './config/socket.js';
 dotenv.config();
 
 const app = express();
@@ -22,6 +24,8 @@ app.use(express.json());
 app.use(cookieParser());
 // Connect to MongoDB
 connectDB();
+const httpServer = createServer(app);
+initSocket(httpServer);
 
 // API endpoints
 app.use('/api/auth', AuthRouter);
@@ -29,4 +33,4 @@ app.use('/api/profile', ProfileRouter);
 app.use('/api/2fa', sfarouter);
 app.use('/api/handle', handleRounter);
 
-app.listen(port, () => console.log(`Server is running on port ${port}!`));
+httpServer.listen(port, () => console.log(`Server is running on port ${port}!`));
