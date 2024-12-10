@@ -11,8 +11,9 @@ import axiosInstance from '@/lib/axiosInstance'
 import { toast, Toaster } from "sonner"
 import { API_ROUTES } from '@/lib/constants'
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp"
+import { withPublicAuth } from '@/HOC/nextwithauth'
 
-export default function ImprovedLoginComponent() {
+function ImprovedLoginComponent() {
     const [isDarkMode, setIsDarkMode] = useState(true)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
@@ -233,4 +234,5 @@ export default function ImprovedLoginComponent() {
         </div>
     )
 }
+export default withPublicAuth(ImprovedLoginComponent);
 

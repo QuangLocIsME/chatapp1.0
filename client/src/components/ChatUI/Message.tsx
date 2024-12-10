@@ -13,33 +13,31 @@ interface MessageProps {
 
 export default function Message({ content, sender, isOwnMessage, timestamp }: MessageProps) {
     return (
-        <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} items-end space-x-2`}>
-            {!isOwnMessage && (
-                <Avatar className="h-8 w-8 flex-shrink-0">
+        <div className={`flex items-end gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div className={`relative ${isOwnMessage ? 'order-2' : 'order-1'}`}>
+                <Avatar className="h-8 w-8 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <AvatarImage src={sender.avatar} alt={sender.name} />
                     <AvatarFallback>{sender.name[0]}</AvatarFallback>
                 </Avatar>
-            )}
-            <div className={`max-w-[70%] ${isOwnMessage ? 'ml-auto' : 'mr-auto'}`}>
-                {!isOwnMessage && (
-                    <p className="text-sm text-muted-foreground mb-1">{sender.name}</p>
-                )}
-                <div className={`rounded-2xl px-4 py-2 ${isOwnMessage
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground'
-                    }`}>
-                    <p className="text-sm">{content}</p>
-                </div>
-                <p className={`text-xs mt-1 ${isOwnMessage ? 'text-right' : ''} text-muted-foreground`}>
-                    {format(timestamp, 'HH:mm')}
-                </p>
             </div>
-            {isOwnMessage && (
-                <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarImage src={sender.avatar} alt={sender.name} />
-                    <AvatarFallback>{sender.name[0]}</AvatarFallback>
-                </Avatar>
-            )}
+            <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} max-w-[60%]`}>
+                <div className="flex flex-col space-y-0.5">
+                    {!isOwnMessage && (
+                        <span className="text-xs text-muted-foreground px-2">{sender.name}</span>
+                    )}
+                    <div
+                        className={`px-4 py-2 rounded-3xl text-sm ${isOwnMessage
+                                ? 'bg-[#0084ff] text-white rounded-br-lg'
+                                : 'bg-[#f0f0f0] text-[#333333] rounded-bl-lg'
+                            }`}
+                    >
+                        {content}
+                    </div>
+                </div>
+                <span className={`text-[11px] text-muted-foreground mt-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    {format(timestamp, 'HH:mm')}
+                </span>
+            </div>
         </div>
     )
 }

@@ -31,6 +31,19 @@ export default function ChatArea({ recipientId }: { recipientId: string }) {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // Fetch user details
+    useEffect(() => {
+        const fetchUserDetails = async () => {
+            try {
+                const response = await axiosInstance.get(API_ROUTES.GETUSERDETAILS);
+                setCurrentUser(response.data);
+            } catch (err) {
+                console.error("Error fetching user details:", err);
+            }
+        };
+        fetchUserDetails();
+    }, []);
+
     // Fetch messages function
     const fetchMessages = async () => {
         try {
@@ -150,7 +163,7 @@ export default function ChatArea({ recipientId }: { recipientId: string }) {
                                 key={`${message._id}-${index}`}
                                 content={message.content}
                                 sender={message.sender}
-                                isOwnMessage={currentUser?._id === message.sender._id}
+                                isOwnMessage={message.sender._id === currentUser?._id}
                                 timestamp={new Date(message.timestamp)}
                             />
                         ))}
