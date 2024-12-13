@@ -7,27 +7,22 @@ const startChat = async (req, res) => {
     const token = req.cookies.token;
 
     try {
-        // Kiểm tra xem email có được gửi trong body request không
         if (!email) {
             return res.status(400).json({ message: "Invalid or missing Email" });
         }
 
-        // Lấy thông tin người dùng hiện tại từ token
         const user = await CheckUserDetailWithToken(token);
 
-        // Kiểm tra nếu người dùng cố gắng bắt đầu trò chuyện với chính mình
         if (user.email === email) {
             return res.status(400).json({ message: "You cannot start a chat with yourself" });
         }
 
-        // Kiểm tra xem người nhận có tồn tại trong hệ thống không
         const recipient = await UserModel.findOne({ email });
 
         if (!recipient) {
             return res.status(404).json({ message: "Recipient not found" });
         }
 
-        // Kiểm tra xem đã có cuộc trò chuyện giữa người dùng và người nhận chưa
         const existingChat = await Messages.findOne({
             $or: [
                 { sender: user._id, recipient: recipient._id },
@@ -35,7 +30,6 @@ const startChat = async (req, res) => {
             ]
         });
 
-        // Nếu cuộc trò chuyện đã tồn tại, trả về cuộc trò chuyện hiện tại
         if (existingChat) {
             return res.status(200).json({ message: "Chat already exists", chat: existingChat });
         }

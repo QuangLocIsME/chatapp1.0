@@ -26,10 +26,11 @@ export default function Message({ content, sender, isOwnMessage, timestamp }: Me
                         <span className="text-xs text-muted-foreground px-2">{sender.name}</span>
                     )}
                     <div
-                        className={`px-4 py-2 rounded-3xl text-sm ${isOwnMessage
+                        className={`px-4 py-2 rounded-3xl text-sm ${
+                            isOwnMessage
                                 ? 'bg-[#0084ff] text-white rounded-br-lg'
                                 : 'bg-[#f0f0f0] text-[#333333] rounded-bl-lg'
-                            }`}
+                        }`}
                     >
                         {content}
                     </div>
